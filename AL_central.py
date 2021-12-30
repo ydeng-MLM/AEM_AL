@@ -15,7 +15,7 @@ def query_GS(X_train, n_batch, n_pool):
       dist = pairwise_distances(X_train, X_pool, metric='euclidean')
       D_min = np.min(dist, axis=0).reshape(-1, 1)
       X_add.append(X_pool[np.argmax(D_min), :])
-      X_train = np.vstack((X_train, X_add))
+      X_train = np.vstack((X_train, X_pool[np.argmax(D_min), :]))
       X_pool = np.delete(X_pool, np.argmax(D_min), 0)
 
   X_add = np.array(X_add).astype('float32')
@@ -44,4 +44,4 @@ def AL_train(mse_target, n_init, n_batch, n_pool, data_type='Nano'):
     return mse_GS, n_total
 
 if __name__ == '__main__':
-    AL_train(mse_target=8e-3, n_init=100, n_batch=100, n_pool=1000, data_type='Nano')
+    AL_train(mse_target=8e-3, n_init=1000, n_batch=1000, n_pool=10000, data_type='Nano')

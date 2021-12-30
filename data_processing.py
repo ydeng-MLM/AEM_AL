@@ -24,9 +24,9 @@ def data_initial(n_sample, data=None):
         X_test = X_test/10
     elif data == 'Nano':
         X_train, y_train = nano_generate(30, 70, num_samples=n_sample, num_layers=8)
-        X_test, y_test = nano_generate(30, 70, num_samples=100, num_layers=8)
-        X_train = normalize_np(X_train).astype('float32')
-        X_test = normalize_np(X_test).astype('float32')
+        X_test, y_test = nano_generate(30, 70, num_samples=1000, num_layers=8)
+        X_train = ((X_train - 50) / 20).astype('float32')
+        X_test = ((X_test - 50) / 20).astype('float32')
         y_train = y_train.astype('float32')
         y_test = y_test.astype('float32')
 
