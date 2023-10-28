@@ -2,6 +2,8 @@ import numpy as np
 from scipy.special import jv, yv
 import time
 
+from multiprocessing import Pool
+
 
 def product(a, b):
     z = np.array([a[0] * b[0] + a[2] * b[1], a[1] * b[0] + a[3] * b[1], a[0] * b[2] + a[2] * b[3],
@@ -161,8 +163,10 @@ def nano_generate(low_bound, up_bound, num_samples, num_layers):
     data_y = []
     data_x = []
 
+    #np.random.seed(np.random.randint(0, 1000000))
+
     for n in range(num_samples):
-        r = np.round(np.random.rand(num_layers) * (up_bound - low_bound) + low_bound, 1)
+        r = np.random.rand(num_layers) * (up_bound - low_bound) + low_bound
         # r = rad[n]
 
         spect = simulate(r)
@@ -186,8 +190,77 @@ def nano_generate(low_bound, up_bound, num_samples, num_layers):
     return data_x, data_y
 
 
+def generate_multi_processing(index, num_samples):
+    """
+    The helper function to be called using multi-processing generation
+    index: The i-th batch of things
+    num_samples: The number of samples to be generated in this batch of run
+    """
+    low_bound = 30
+    up_bound = 70
+    num_layers = 8
+
+    data_x, data_y = nano_generate(low_bound, up_bound, num_samples, num_layers)
+
+    return data_x, data_y
+
+def simulate_multiprocess(i, x):
+    y = []
+
+    for i in range(x.shape[0]):
+        radii = np.round(x[i], decimal=1)
+        spec = simulate(radii)
+        y.append(spec)
+
+    return np.array(y)
+
+def nano_simulate_multiprocess(x):
+    num_cpu = 10
+    try:
+        pool = Pool(num_cpu)
+        args_list = []
+        for i in range(num_cpu):
+            args_list.append((i, x[i*(len(x) // num_cpu):(i+1)*(len(x) // num_cpu), :]))
+        print(len(args_list))
+        X_list = pool.starmap(simulate_multiprocess, args_list)
+    finally:
+        pool.close()
+        pool.join()
+
+
+    y_data = np.empty((0, 201), float)
+    for row in X_list:
+        y_data = np.append(y_data, row, axis=0)
+
+    return y_data
+
+def nano_generate_multiprocess(num_sample=100):
+    num_cpu = 10
+    ndata = num_sample
+    try:
+        pool = Pool(num_cpu)
+        args_list = []
+        for i in range(num_cpu):
+            args_list.append((i, ndata // num_cpu))
+        # print((args_list))
+        # print(len(args_list))
+        X_list = pool.starmap(generate_multi_processing, args_list)
+    finally:
+        pool.close()
+        pool.join()
+
+    X_data = np.empty((0, 8), float)
+    for row in X_list:
+        X_data = np.append(X_data, row[0], axis=0)
+
+    y_data = np.empty((0, 201), float)
+    for row in X_list:
+        y_data = np.append(y_data, row[1], axis=0)
+
+    return X_data, y_data
 
 if __name__ == '__main__':
+    '''
     # Normal bound
     start = time.time()
     low_bound = 30
@@ -198,3 +271,13 @@ if __name__ == '__main__':
     data_x, data_y = nano_generate(low_bound, up_bound, num_samples, num_layers)
     print(data_x.shape, data_y.shape)
     print(time.time() - start)
+    '''
+
+    start = time.time()
+    X_data, y_data = nano_generate_multiprocess(20)
+    print(time.time() - start)
+
+
+    print(X_data.shape, y_data.shape)
+
+    #combine_multi_processing(num_cpu)
