@@ -2,7 +2,7 @@ from GPyOpt.methods import BayesianOptimization
 
 from AL_central import AL_train
 
-DATA = 'color'
+DATA = 'ADM'
 MSE_T = 1e-3
 
 def obj_func_dqbc(x):
@@ -61,12 +61,14 @@ def bayesian_opt_gs():
 
 def obj_func_pm(x):
     n_pool = 100*int(x[0, 0])
-    print(n_pool)
+    n_init = int(x[0,1])
+    print(n_pool, n_init)
     mse, n_train = AL_train(mse_target=MSE_T, n_init=1000, n_test=1000, n_batch=100, n_pool=n_pool, n_com=1, rd=0, data_type=DATA, model_type='MLP', query_type='PM')
     return n_train
 
 def bayesian_opt_pm():
-    bounds = [{'name': 'n_pool', 'type': 'continuous', 'domain': (2, 10)}]
+    bounds = [{'name': 'n_pool', 'type': 'continuous', 'domain': (2, 10)},
+            {'name': 'n_init', 'type':'continuous', 'domain':(5000, 10000)}]
 
     BO = BayesianOptimization(obj_func_pm, domain=bounds)
     BO.run_optimization(max_iter=30)
@@ -76,8 +78,8 @@ def bayesian_opt_pm():
     print("=" * 20)
 
 if __name__ == '__main__':
-    bayesian_opt_dqbc()
+    #bayesian_opt_dqbc()
     #bayesian_opt_qbc()
     #bayesian_opt_gs()
-    #bayesian_opt_pm()
+    bayesian_opt_pm()
 
